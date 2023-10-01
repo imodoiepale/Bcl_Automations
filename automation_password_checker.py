@@ -92,7 +92,7 @@ with sync_playwright() as p:
             # Update the status as valid
             status = "Valid"
         else:
-            if page.get_by_role("row", name="Invalid Login Id or Password.", exact=True).get_by_role("cell") or page.get_by_role("cell", name="The account has been locked.", exact=True).click():
+            if page.get_by_role("row", name="Invalid Login Id or Password.", exact=True).get_by_role("cell") or page.get_by_role("cell", name="The account has been locked.", exact=True):
                 
                 # Update the status as invalid
                 status = "Invalid"
