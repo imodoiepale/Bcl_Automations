@@ -1,10 +1,18 @@
+import os
+
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from playwright.sync_api import sync_playwright
 import time
 
+# Get the current directory
+current_directory = os.getcwd()
+
+# Specify the file path relative to the current directory
+file_path = os.path.join(current_directory, "nhif_passwords.xlsx")
+
 try:
-    wb = load_workbook(r"C:\Users\DELL\Desktop\BCL AUTOMATIONS/nhif_passwords.xlsx")
+    wb = load_workbook(file_path)
     ws = wb.active
 except FileNotFoundError:
     print("The 'nhif_passwords.xlsx' file does not exist.")
@@ -16,7 +24,7 @@ red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='soli
 
 def login_and_update_status(username, password, row):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
@@ -71,6 +79,7 @@ def login_and_update_status(username, password, row):
             # Save the updated workbook to the Excel file
             wb.save("nhif_passwords.xlsx")
 
+        print("Iteration complete")
         # Close the browser
         browser.close()
 
