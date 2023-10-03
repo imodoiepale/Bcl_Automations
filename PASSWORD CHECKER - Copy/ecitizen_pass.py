@@ -2,12 +2,19 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from playwright.sync_api import sync_playwright
 import time
+import os
+
+# Get the current directory
+current_directory = os.getcwd()
+
+# Specify the file path relative to the current directory
+file_path = os.path.join(current_directory, "nssf_passwords.xlsx")
 
 try:
-    wb = load_workbook(r"C:\Users\DELL\Desktop\BCL AUTOMATIONS/nhif_passwords.xlsx")
+    wb = load_workbook(file_path)
     ws = wb.active
 except FileNotFoundError:
-    print("The 'nhif_passwords.xlsx' file does not exist.")
+    print("The 'ecitizen_passwords.xlsx' file does not exist.")
     exit(1)
 
 # Define fill patterns for green and red
@@ -16,7 +23,7 @@ red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='soli
 
 def login_and_update_status(username, password, row):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
         page = context.new_page()
 
@@ -29,27 +36,27 @@ def login_and_update_status(username, password, row):
             # Print information for debugging
             print(f"Processing: {current_username}, {current_password}, {current_status}")
 
-            time.sleep(1)
             # Navigate to the eCitizen login page
-            page.goto("https://payrollbyproduct.nhif.or.ke/byproduct/login.php")
-            
+            page.goto("https://accounts.ecitizen.go.ke/en/login")
+            time.sleep(0.5)
             # Fill in the login form
-            page.fill("#logUsername", str(current_username))
-            page.fill("#logPassword", str(current_password))
+            page.fill("#login_username", str(current_username))
+            page.fill("#login_pwd", str(current_password))
 
             # Click the login button to submit the form
-            page.get_by_role("button", name="Login").click()
+            page.get_by_role("button", name="Sign In").click()
 
             try:
-                # Check if the login is successful by looking for "Byproduct Upload" text
-                page.get_by_text("Byproduct Upload")
+                # Check if the login is successful by looking for "ID Number" text
+                page.wait_for_selector("text=ID Number")
                 # Click the logout button
-                page.get_by_role("link", name="Logout").click()
+                page.get_by_role("link", name="Log out").click()
                 # Update the status as valid
                 current_status = "Valid"
 
             except:
-                time.sleep(1)
+                # Click the close button for the error popup if it exists
+                page.get_by_role("button", name="close").click()
                 # Handle error if login fails
                 print("Login failed.")
                 # Update the status as invalid
@@ -69,8 +76,8 @@ def login_and_update_status(username, password, row):
                 ws.cell(row=excel_row[0].row, column=4).fill = red_fill
 
             # Save the updated workbook to the Excel file
-            wb.save("nhif_passwords.xlsx")
-
+            wb.save("ecitizen_passwords.xlsx")
+        print("Iteration complete")
         # Close the browser
         browser.close()
 
